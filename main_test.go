@@ -63,9 +63,9 @@ func TestCheckRepos(t *testing.T) {
 			"org-2/repo-z": {"c-bot", "some-user"},
 		},
 		membersByOrg: map[string][]string{
-			"org-1": {"a-user", "d-bot", "e-bot"},
+			"org-1": {"a-user", "d-bot", "e-bot", "openshift-cherrypick-robot"},
 			"org-2": {"some-user", "z-bot"},
-			"org-3": {"a-user"},
+			"org-3": {"a-user", "openshift-cherrypick-robot"},
 		},
 		reposWithAppInstalled: sets.New[string]("org-1/repo-a", "org-2/repo-z"),
 	}
