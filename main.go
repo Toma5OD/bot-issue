@@ -75,6 +75,7 @@ type automationClient interface {
 	IsMember(org, user string) (bool, error)
 	IsCollaborator(org, repo, user string) (bool, error)
 	IsAppInstalled(org, repo string) (bool, error)
+	IsCherrypickPluginConfigured(org, repo string) (bool, error)
 }
 
 func main() {
@@ -157,16 +158,23 @@ func checkRepos(repos []string, bots []string, ignore sets.Set[string], client a
 			}
 		}
 
-		// Add a check for openshift-cherrypick-robot
-		isCherryPickRobotMember, err := client.IsMember(org, "openshift-cherrypick-robot")
+		// Check if the cherrypick plugin is configured for the repo
+		isCherrypickPluginConfigured, err := client.IsCherrypickPluginConfigured(org, repo)
 		if err != nil {
-			return nil, fmt.Errorf("unable to determine if openshift-cherrypick-robot is a member of %s: %w", org, err)
+			return nil, fmt.Errorf("unable to determine if cherrypick plugin is configured for %s/%s: %w", org, repo, err)
 		}
-		if !isCherryPickRobotMember {
-			failing.Insert(orgRepo)
-			repoLogger.Error("openshift-cherrypick-robot is not an org member")
-		} else {
-			repoLogger.Info("openshift-cherrypick-robot is an org member")
+		if isCherrypickPluginConfigured {
+			// Add a check for openshift-cherrypick-robot
+			isCherryPickRobotMember, err := client.IsMember(org, "openshift-cherrypick-robot")
+			if err != nil {
+				return nil, fmt.Errorf("unable to determine if openshift-cherrypick-robot is a member of %s: %w", org, err)
+			}
+			if !isCherryPickRobotMember {
+				failing.Insert(orgRepo)
+				repoLogger.Error("openshift-cherrypick-robot is not an org member")
+			} else {
+				repoLogger.Info("openshift-cherrypick-robot is an org member")
+			}
 		}
 
 		if len(missingBots) > 0 {
