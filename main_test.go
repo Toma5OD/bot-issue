@@ -151,6 +151,18 @@ func TestCheckRepos(t *testing.T) {
 			bots:        []string{"a-bot"},
 			expectedErr: errors.New("unable to determine if openshift-ci app is installed on org-1/error: intentional error"),
 		},
+		{
+			name:     "openshift-cherrypick-robot is an org member",
+			repos:    []string{"org-1/repo-a"},
+			bots:     []string{"d-bot", "e-bot"},
+			expected: []string{},
+		},
+		{
+			name:     "openshift-cherrypick-robot is not an org member",
+			repos:    []string{"org-2/repo-z"},
+			bots:     []string{"z-bot"},
+			expected: []string{"org-2/repo-z"},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
