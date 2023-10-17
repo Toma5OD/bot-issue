@@ -152,6 +152,20 @@ func TestCheckRepos(t *testing.T) {
 			expectedErr: errors.New("unable to determine if openshift-ci app is installed on org-1/error: intentional error"),
 		},
 		{
+			name:     "openshift-cherrypick-robot is an org member, cherrypick enabled",
+			repos:    []string{"org-1/repo-a"},
+			bots:     []string{"d-bot", "e-bot"},
+			// Simulate cherrypick plugin enabled for org-1/repo-a
+			expected: []string{},
+		},
+		{
+			name:     "openshift-cherrypick-robot is not an org member, cherrypick enabled",
+			repos:    []string{"org-2/repo-z"},
+			bots:     []string{"z-bot"},
+			// Simulate cherrypick plugin enabled for org-2/repo-z
+			expected: []string{"org-2/repo-z"},
+		},
+		{
 			name:     "openshift-cherrypick-robot is an org member",
 			repos:    []string{"org-1/repo-a"},
 			bots:     []string{"d-bot", "e-bot"},
