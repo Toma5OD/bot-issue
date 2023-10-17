@@ -17,7 +17,6 @@ type fakeAutomationClient struct {
 	collaboratorsByRepo   map[string][]string
 	membersByOrg          map[string][]string
 	reposWithAppInstalled sets.Set[string]
-	reposWithCherrypickPlugin sets.Set[string]
 }
 
 func (c fakeAutomationClient) IsMember(org, user string) (bool, error) {
@@ -57,11 +56,6 @@ func (c fakeAutomationClient) IsAppInstalled(org, repo string) (bool, error) {
 	return c.reposWithAppInstalled.Has(orgRepo), nil
 }
 
-func (c fakeAutomationClient) IsCherrypickPluginConfigured(org, repo string) (bool, error) {
-	orgRepo := fmt.Sprintf("%s/%s", org, repo)
-	return c.reposWithCherrypickPlugin.Has(orgRepo), nil
-}
-
 func TestCheckRepos(t *testing.T) {
 	client := fakeAutomationClient{
 		collaboratorsByRepo: map[string][]string{
@@ -74,7 +68,6 @@ func TestCheckRepos(t *testing.T) {
 			"org-3": {"a-user", "openshift-cherrypick-robot"},
 		},
 		reposWithAppInstalled: sets.New[string]("org-1/repo-a", "org-2/repo-z"),
-		reposWithCherrypickPlugin: sets.New[string]("org-1/repo-a"),
 	}
 
 	testCases := []struct {
@@ -157,34 +150,6 @@ func TestCheckRepos(t *testing.T) {
 			repos:       []string{"org-1/error"},
 			bots:        []string{"a-bot"},
 			expectedErr: errors.New("unable to determine if openshift-ci app is installed on org-1/error: intentional error"),
-		},
-		{
-			name:     "openshift-cherrypick-robot is an org member, cherrypick enabled",
-			repos:    []string{"org-1/repo-a"},
-			bots:     []string{"d-bot", "e-bot"},
-			// Simulate cherrypick plugin enabled for org-1/repo-a
-			expected: []string{},
-		},
-		{
-			name:     "openshift-cherrypick-robot is not an org member, cherrypick enabled",
-			repos:    []string{"org-2/repo-z"},
-			bots:     []string{"z-bot"},
-			// Simulate cherrypick plugin enabled for org-2/repo-z
-			expected: []string{"org-2/repo-z"},
-		},
-		{
-			name:     "openshift-cherrypick-robot is an org member, cherrypick disabled",
-			repos:    []string{"org-2/repo-z"},
-			bots:     []string{"d-bot", "e-bot"},
-			// Simulate cherrypick plugin disabled for org-2/repo-z
-			expected: []string{},
-		},
-		{
-			name:     "openshift-cherrypick-robot is not an org member, cherrypick disabled",
-			repos:    []string{"org-2/repo-z"},
-			bots:     []string{"z-bot"},
-			// Simulate cherrypick plugin disabled for org-2/repo-z
-			expected: []string{},
 		},
 		{
 			name:     "openshift-cherrypick-robot is an org member",
