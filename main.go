@@ -27,6 +27,23 @@ type options struct {
 	flagutil.GitHubOptions
 }
 
+func (o *options) ProwConfig() (*config.Config, error) {
+	agent, err := o.config.ConfigAgent()
+	if err != nil {
+		return nil, err
+	}
+	return agent.Config(), nil
+}
+
+func isCherryPickPluginEnabled(org string, repo string, prowConfig *config.Config) bool {
+	for _, plugin := range prowConfig.Plugins[org][repo] {
+		if plugin == "cherrypick" {
+			return true
+		}
+	}
+	return false
+}
+
 func gatherOptions() options {
 	o := options{}
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -84,6 +101,17 @@ func main() {
 	o := gatherOptions()
 	if err := o.validate(); err != nil {
 		logger.Fatalf("validation error: %v", err)
+	}
+
+	prowConfig, err := o.ProwConfig()
+	if err != nil {
+		logger.Fatalf("error getting prow config: %v", err)
+	}
+
+	if isCherryPickPluginEnabled("org", "repo", prowConfig) {
+		logger.Info("cherrypick plugin is enabled")
+	} else {
+		logger.Info("cherrypick plugin is not enabled")
 	}
 
 	client, err := o.GitHubOptions.GitHubClient(false)
