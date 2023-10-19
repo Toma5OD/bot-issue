@@ -167,6 +167,18 @@ func TestCheckRepos(t *testing.T) {
 			bots:     []string{"z-bot"},
 			expected: []string{"org-2/repo-z"},
 		},
+		{
+			name:     "cherrypick enabled at org level",
+			repos:    []string{"org-1/repo-a"},
+			bots:     []string{"d-bot", "e-bot"},
+			expected: []string{},
+		},
+		{
+			name:     "cherrypick enabled at repo level",
+			repos:    []string{"org-2/repo-z"},
+			bots:     []string{"z-bot"},
+			expected: []string{},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
