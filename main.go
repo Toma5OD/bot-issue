@@ -107,7 +107,7 @@ func main() {
 	logger.Infof("All repos have github automation configured.")
 }
 
-func hasCherrypickPluginInOrgOrRepo(client *github.Client, org, repo string) (bool, error) {
+func hasCherrypickPluginInOrgOrRepo(client automationClient, org, repo string) (bool, error) {
 	// Check org-level config
 	orgFileContent, _, _, err := client.Repositories.GetContents(context.Background(), org, "_prowconfig.yaml", nil)
 	if err == nil {
