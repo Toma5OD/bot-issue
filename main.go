@@ -121,7 +121,7 @@ func hasCherrypickPluginInOrgOrRepo(client *github.Client, org, repo string) (bo
 	}
 
 	// Check repo-level config
-	repoFileContent, _, _, err := client.Repositories.GetContents(context.Background(), org, repo, "_prowconfig.yaml", nil)
+	repoFileContent, _, _, err := client.Repositories.GetContents(context.Background(), org, repo, "_prowconfig.yaml", &github.RepositoryContentGetOptions{})
 	if err != nil {
 		return false, err
 	}
