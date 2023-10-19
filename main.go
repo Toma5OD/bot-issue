@@ -107,18 +107,31 @@ func main() {
 	logger.Infof("All repos have github automation configured.")
 }
 
-func hasCherrypickPlugin(client *github.Client, owner, repo string) (bool, error) {
-	fileContent, _, _, err := client.Repositories.GetContents(context.Background(), owner, repo, "_pluginconfig.yaml", nil)
+func hasCherrypickPluginInOrgOrRepo(client *github.Client, org, repo string) (bool, error) {
+	// Check org-level config
+	orgFileContent, _, _, err := client.Repositories.GetContents(context.Background(), org, "_prowconfig.yaml", nil)
+	if err == nil {
+		orgContent, err := orgFileContent.GetContent()
+		if err != nil {
+			return false, err
+		}
+		if strings.Contains(orgContent, "- endpoint: http://cherrypick") {
+			return true, nil
+		}
+	}
+
+	// Check repo-level config
+	repoFileContent, _, _, err := client.Repositories.GetContents(context.Background(), org, repo, "_prowconfig.yaml", nil)
 	if err != nil {
 		return false, err
 	}
 
-	content, err := fileContent.GetContent()
+	repoContent, err := repoFileContent.GetContent()
 	if err != nil {
 		return false, err
 	}
 
-	return strings.Contains(content, "- endpoint: http://cherrypick"), nil
+	return strings.Contains(repoContent, "- endpoint: http://cherrypick"), nil
 }
 
 func determineRepos(o options, logger *logrus.Entry) []string {
@@ -154,7 +167,7 @@ func checkRepos(repos []string, bots []string, ignore sets.Set[string], client a
 			continue
 		}
 
-		hasCherrypick, err := hasCherrypickPlugin(client, org, repo)
+		hasCherrypick, err := hasCherrypickPluginInOrgOrRepo(client, org, repo)
 		if err != nil {
 			return nil, fmt.Errorf("unable to determine if cherrypick plugin is enabled for %s/%s: %w", org, repo, err)
 		}
