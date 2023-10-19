@@ -17,6 +17,8 @@ type fakeAutomationClient struct {
 	collaboratorsByRepo   map[string][]string
 	membersByOrg          map[string][]string
 	reposWithAppInstalled sets.Set[string]
+	cherrypickEnabledOrgs   sets.Set[string]
+	cherrypickEnabledRepos  sets.Set[string]
 }
 
 func (c fakeAutomationClient) IsMember(org, user string) (bool, error) {
