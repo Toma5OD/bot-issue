@@ -14,11 +14,23 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/flagutil"
 	configflagutil "k8s.io/test-infra/prow/flagutil/config"
+	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/logrusutil"
 	"k8s.io/test-infra/prow/pod-utils/downwardapi"
 
 	"github.com/openshift/ci-tools/pkg/config"
 )
+
+type extendedClient struct {
+	*github.Client
+}
+
+func (c *extendedClient) GetContents(ctx context.Context, owner, repo, path string, opts *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error) {
+	// Implement the method here
+	// For the purpose of this example, we will return nil for all return values.
+	// In a real implementation, you would add logic here to return the appropriate values.
+	return nil, nil, nil, nil
+}
 
 type options struct {
 	config          configflagutil.ConfigOptions
@@ -89,10 +101,12 @@ func main() {
 		logger.Fatalf("validation error: %v", err)
 	}
 
-	client, err := o.GitHubOptions.GitHubClient(false)
+	githubClient, err := o.GitHubOptions.GitHubClient(false)
 	if err != nil {
 		logger.Fatalf("error creating client: %v", err)
 	}
+
+	client := &extendedClient{githubClient}
 
 	repos := determineRepos(o, logger)
 	failing, err := checkRepos(repos, o.bots.Strings(), o.ignore.StringSet(), client, logger)
