@@ -196,3 +196,47 @@ func TestCheckRepos(t *testing.T) {
 		})
 	}
 }
+func TestHasCherrypickPluginInOrgOrRepo(t *testing.T) {
+    client := fakeAutomationClient{
+        cherrypickEnabledOrgs:   sets.NewString("org-1"),
+        cherrypickEnabledRepos:  sets.NewString("org-2/repo-z"),
+    }
+
+    testCases := []struct {
+        name     string
+        org      string
+        repo     string
+        expected bool
+    }{
+        {
+            name:     "cherrypick enabled at org level",
+            org:      "org-1",
+            repo:     "repo-a",
+            expected: true,
+        },
+        {
+            name:     "cherrypick enabled at repo level",
+            org:      "org-2",
+            repo:     "repo-z",
+            expected: true,
+        },
+        {
+            name:     "cherrypick not enabled",
+            org:      "org-3",
+            repo:     "repo-y",
+            expected: false,
+        },
+    }
+
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            result, err := hasCherrypickPluginInOrgOrRepo(client, tc.org, tc.repo)
+            if err != nil {
+                t.Fatalf("unexpected error: %v", err)
+            }
+            if result != tc.expected {
+                t.Fatalf("expected %v, got %v", tc.expected, result)
+            }
+        })
+    }
+}
