@@ -77,6 +77,7 @@ type automationClient interface {
 	IsMember(org, user string) (bool, error)
 	IsCollaborator(org, repo, user string) (bool, error)
 	IsAppInstalled(org, repo string) (bool, error)
+	GetContents(ctx context.Context, owner, repo, path string, opts *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
 }
 
 func main() {
