@@ -162,13 +162,15 @@ func checkRepos(repos []string, bots []string, ignore sets.Set[string], client a
 		if hasCherrypick {
 			var missingBots []string
 			for _, bot := range bots {
-				isMember, err := client.IsMember(org, bot)
-				if err != nil {
-					return nil, fmt.Errorf("unable to determine if: %s is a member of %s: %w", bot, org, err)
-				}
-				if isMember {
-					repoLogger.WithField("bot", bot).Info("bot is an org member")
-					continue
+				if bot == "openshift-cherrypick-robot" {
+					isMember, err := client.IsMember(org, bot)
+					if err != nil {
+						return nil, fmt.Errorf("unable to determine if: %s is a member of %s: %w", bot, org, err)
+					}
+					if isMember {
+						repoLogger.WithField("bot", bot).Info("bot is an org member")
+						continue
+					}
 				}
 
 				isCollaborator, err := client.IsCollaborator(org, repo, bot)
