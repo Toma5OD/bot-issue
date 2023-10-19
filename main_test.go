@@ -70,6 +70,8 @@ func TestCheckRepos(t *testing.T) {
 			"org-3": {"a-user", "openshift-cherrypick-robot"},
 		},
 		reposWithAppInstalled: sets.New[string]("org-1/repo-a", "org-2/repo-z"),
+		cherrypickEnabledOrgs: sets.NewString("org-1"),
+		cherrypickEnabledRepos: sets.NewString("org-2/repo-z"),
 	}
 
 	testCases := []struct {
