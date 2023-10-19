@@ -21,6 +21,10 @@ type fakeAutomationClient struct {
 	cherrypickEnabledRepos  sets.Set[string]
 }
 
+func (c fakeAutomationClient) GetContents(ctx context.Context, owner, repo, path string, opts *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error) {
+	// Implement the method here
+}
+
 func (c fakeAutomationClient) IsMember(org, user string) (bool, error) {
 	for _, member := range c.membersByOrg[org] {
 		if user == member {
