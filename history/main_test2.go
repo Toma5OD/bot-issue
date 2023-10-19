@@ -6,11 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
-
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/openshift/ci-tools/pkg/testhelper"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type fakeAutomationClient struct {
@@ -63,9 +61,9 @@ func TestCheckRepos(t *testing.T) {
 			"org-2/repo-z": {"c-bot", "some-user"},
 		},
 		membersByOrg: map[string][]string{
-			"org-1": {"a-user", "d-bot", "e-bot"},
+			"org-1": {"a-user", "d-bot", "e-bot", "openshift-cherrypick-robot"},
 			"org-2": {"some-user", "z-bot"},
-			"org-3": {"a-user"},
+			"org-3": {"a-user", "openshift-cherrypick-robot"},
 		},
 		reposWithAppInstalled: sets.New[string]("org-1/repo-a", "org-2/repo-z"),
 	}
@@ -150,6 +148,18 @@ func TestCheckRepos(t *testing.T) {
 			repos:       []string{"org-1/error"},
 			bots:        []string{"a-bot"},
 			expectedErr: errors.New("unable to determine if openshift-ci app is installed on org-1/error: intentional error"),
+		},
+		{
+			name:     "openshift-cherrypick-robot is an org member",
+			repos:    []string{"org-1/repo-a"},
+			bots:     []string{"d-bot", "e-bot"},
+			expected: []string{},
+		},
+		{
+			name:     "openshift-cherrypick-robot is not an org member",
+			repos:    []string{"org-2/repo-z"},
+			bots:     []string{"z-bot"},
+			expected: []string{"org-2/repo-z"},
 		},
 	}
 	for _, tc := range testCases {

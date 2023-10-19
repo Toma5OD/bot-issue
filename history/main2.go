@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -104,6 +105,20 @@ func main() {
 	logger.Infof("All repos have github automation configured.")
 }
 
+func hasCherrypickPlugin(client *githubv32.Client, owner, repo string) (bool, error) {
+	fileContent, _, _, err := client.Repositories.GetContents(context.Background(), owner, repo, "_pluginconfig.yaml", nil)
+	if err != nil {
+		return false, err
+	}
+
+	content, err := fileContent.GetContent()
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(content, "- endpoint: http://cherrypick"), nil
+}
+
 func determineRepos(o options, logger *logrus.Entry) []string {
 	repos := o.repos.Strings()
 	if len(repos) > 0 {
@@ -137,23 +152,30 @@ func checkRepos(repos []string, bots []string, ignore sets.Set[string], client a
 			continue
 		}
 
-		var missingBots []string
-		for _, bot := range bots {
-			isMember, err := client.IsMember(org, bot)
-			if err != nil {
-				return nil, fmt.Errorf("unable to determine if: %s is a member of %s: %w", bot, org, err)
-			}
-			if isMember {
-				repoLogger.WithField("bot", bot).Info("bot is an org member")
-				continue
-			}
+		hasCherrypick, err := hasCherrypickPlugin(client, org, repo)
+		if err != nil {
+			return nil, fmt.Errorf("unable to determine if cherrypick plugin is enabled for %s/%s: %w", org, repo, err)
+		}
 
-			isCollaborator, err := client.IsCollaborator(org, repo, bot)
-			if err != nil {
-				return nil, fmt.Errorf("unable to determine if: %s is a collaborator on %s/%s: %w", bot, org, repo, err)
-			}
-			if !isCollaborator {
-				missingBots = append(missingBots, bot)
+		if hasCherrypick {
+			var missingBots []string
+			for _, bot := range bots {
+				isMember, err := client.IsMember(org, bot)
+				if err != nil {
+					return nil, fmt.Errorf("unable to determine if: %s is a member of %s: %w", bot, org, err)
+				}
+				if isMember {
+					repoLogger.WithField("bot", bot).Info("bot is an org member")
+					continue
+				}
+
+				isCollaborator, err := client.IsCollaborator(org, repo, bot)
+				if err != nil {
+					return nil, fmt.Errorf("unable to determine if: %s is a collaborator on %s/%s: %w", bot, org, repo, err)
+				}
+				if !isCollaborator {
+					missingBots = append(missingBots, bot)
+				}
 			}
 		}
 
